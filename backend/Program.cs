@@ -4,7 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
-var list = new List<backendDto>
+var games = new List<backendDto>
 {
     new backendDto(1, "Game One", "Action", 59.99m,
     DateOnly.FromDateTime(new DateTime(2023, 1, 15))),
