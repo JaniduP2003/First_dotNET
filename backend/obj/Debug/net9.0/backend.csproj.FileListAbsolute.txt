@@ -32,3 +32,17 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/backend.pdb
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/backend.genruntimeconfig.cache
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/ref/backend.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.EntityFrameworkCore.Relational.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Caching.Abstractions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Caching.Memory.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Configuration.Abstractions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Logging.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Logging.Abstractions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Options.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Primitives.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Npgsql.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
