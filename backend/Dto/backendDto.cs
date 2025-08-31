@@ -4,7 +4,7 @@ public record class backendDto(
     int id,
     string Name,
     string Genre,
-    decimal Price
+    decimal Price,
     DateOnly ReleaseDate
 
-)
+);
