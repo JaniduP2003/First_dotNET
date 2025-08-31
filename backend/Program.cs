@@ -17,6 +17,7 @@ var games = new List<backendDto>
 };
 
 app.MapGet("games", () => games);
+app.MapGet("games/{id}", (int id) => games.Find(game => game.id == id));
 
 // Simple endpoint that returns "Hello World!"
 app.MapGet("/janidu", () => "Hello from backend!");
