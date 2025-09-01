@@ -1,6 +1,7 @@
 using backend.Api.dto;
 using backend.Dto;
 
+
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -25,9 +26,9 @@ app.MapGet("/games/{id}", (int id) =>
 app.MapGet("/janidu", () => "Hello from backend!");
 
 // POST: add new game
-app.MapPost("/games", (CreateGameDto newGame) =>
+app.MapPost("games", (CreateGameDto newGame) =>
 {
-    var game = new backendDto(
+    backendDto game = new (
         games.Count + 1,
         newGame.Name,
         newGame.Genre,
