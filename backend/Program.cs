@@ -1,5 +1,7 @@
+using backend;
 using backend.Api.dto;
 using backend.Dto;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,7 +30,7 @@ app.MapGet("/janidu", () => "Hello from backend!");
 // POST: add new game
 app.MapPost("games", (CreateGameDto newGame) =>
 {
-    backendDto game = new (
+    backendDto game = new(
         games.Count + 1,
         newGame.Name,
         newGame.Genre,
@@ -41,4 +43,22 @@ app.MapPost("games", (CreateGameDto newGame) =>
     return Results.CreatedAtRoute("GetGameById", new { id = game.id }, game);
 });
 
+
+app.MapPost("games/{id}", ( int id , UpdateBackendDto updatedGame) =>
+{
+
+    var index = games.FindIndex(game => game.id == id);
+    games[index] = new backendDto(
+
+        id,
+        updatedGame.Name,
+        updatedGame.Genre,
+        updatedGame.Price,
+        updatedGame.ReleaseDate
+    );
+
+    return Results.NoContent();
+});
+
 app.Run();
+
