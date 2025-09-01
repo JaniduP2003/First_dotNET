@@ -22,8 +22,13 @@ var games = new List<backendDto>
 app.MapGet("/games", () => games);
 
 app.MapGet("/games/{id}", (int id) =>
-    games.Find(game => game.id == id))
-    .WithName("GetGameById");
+{
+
+    backendDto? game = games.Find(game => game.id == id);
+    return (game == null) ? Results.NotFound() : Results.Ok(game);  //variable = (condition) ? expressionTrue :  expressionFalse;
+    //Short Hand If...Else (Ternary Operator)
+
+});
 
 app.MapGet("/janidu", () => "Hello from backend!");
 
