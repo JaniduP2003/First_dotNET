@@ -44,7 +44,7 @@ app.MapPost("games", (CreateGameDto newGame) =>
 });
 
 
-app.MapPost("games/{id}", ( int id , UpdateBackendDto updatedGame) =>
+app.MapPost("games/{id}", (int id, UpdateBackendDto updatedGame) =>
 {
 
     var index = games.FindIndex(game => game.id == id);
@@ -59,6 +59,14 @@ app.MapPost("games/{id}", ( int id , UpdateBackendDto updatedGame) =>
 
     return Results.NoContent();
 });
+
+app.MapDelete("games/{id}", (int id) =>
+{
+   games.RemoveAll(game => game.id == id);
+   return Results.NoContent();
+});
+
+
 
 app.Run();
 
