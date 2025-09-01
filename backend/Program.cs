@@ -1,4 +1,5 @@
 using backend.Api.dto;
+using backend.Dto;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +18,23 @@ var games = new List<backendDto>
 };
 
 app.MapGet("games", () => games);
-app.MapGet("games/{id}", (int id) => games.Find(game => game.id == id));
+app.MapGet("games/{id}", (int id) => games.Find(game => game.id == id)).WithName("GetGameById");
 
 // Simple endpoint that returns "Hello World!"
 app.MapGet("/janidu", () => "Hello from backend!");
+
+CreateGameDto createGameDto = new(   //adds the id for the craetegameedto 
+ games.Count + 1,
+ newGame.name,
+ newGame.Genre.
+ newGame.Price,
+ newGame.ReleaseDate
+ 
+ );
+
+ games.Add(game);
+ 
+ return Results.CreatedAtRoute("GetGameById", new { id = game.id }, game);
+
 
 app.Run();
