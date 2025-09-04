@@ -19,12 +19,14 @@ namespace backend.Endpoints
         public static IEnumerable<BackendDto> GetAllGames() => games;
 
 
-        public static WebApplication MapGamesEndpoints(this WebApplication app)
+        public static RouteGroupBuilder MapGamesEndpoints(this WebApplication app)
         {
 
-            app.MapGet("/games", () => games);
+            var group = app.MapGroup("games").WithParameterValidation();
 
-            app.MapGet("/games/{id}", (int id) =>
+            group.MapGet("/", () => games);
+
+            group.MapGet("/{id}", (int id) =>
             {
 
                 BackendDto? game = games.Find(game => game.id == id);
@@ -33,10 +35,9 @@ namespace backend.Endpoints
 
             }).WithName("GetGameById");
 
-            app.MapGet("/janidu", () => "Hello from backend!");
-
+            
             // POST: add new gameq
-            app.MapPost("games", (CreateGameDto newGame) =>
+            group.MapPost("games", (CreateGameDto newGame) =>
             {
                 BackendDto game = new(
                     games.Count + 1,
@@ -54,7 +55,7 @@ namespace backend.Endpoints
 
 
             //putgames
-            app.MapPut("games/{id}", (int id, UpdateBackendDto updatedGame) =>
+            group.MapPut("games/{id}", (int id, UpdateBackendDto updatedGame) =>
             {
 
                 var index = games.FindIndex(game => game.id == id);
@@ -77,13 +78,13 @@ namespace backend.Endpoints
                 return Results.NoContent();
             });
 
-            app.MapDelete("games/{id}", (int id) =>
+            group.MapDelete("/{id}", (int id) =>
             {
                 games.RemoveAll(game => game.id == id);
                 return Results.NoContent();
             });
 
-            return app;
+            return group;
 
         }
     }
