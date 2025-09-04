@@ -37,7 +37,7 @@ namespace backend.Endpoints
 
             
             // POST: add new gameq
-            group.MapPost("games", (CreateGameDto newGame) =>
+            group.MapPost("/", (CreateGameDto newGame) =>
             {
                 BackendDto game = new(
                     games.Count + 1,
