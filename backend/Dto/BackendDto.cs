@@ -1,6 +1,6 @@
-namespace backend.Api.dto;
+namespace Backend.dto;
 
-public record class backendDto(
+public record class BackendDto(
     int id,
     string Name,
     string Genre,
