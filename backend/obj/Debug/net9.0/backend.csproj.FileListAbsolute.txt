@@ -46,3 +46,5 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Microsoft.Extensions.Primitives.dll
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Npgsql.dll
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/Npgsql.EntityFrameworkCore.PostgreSQL.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/MinimalApis.Extensions.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/MiniValidation.dll

@@ -31,11 +31,11 @@ namespace backend.Endpoints
                 return (game == null) ? Results.NotFound() : Results.Ok(game);  //variable = (condition) ? expressionTrue :  expressionFalse;
                                                                                 //Short Hand If...Else (Ternary Operator)
 
-            });
+            }).WithName("GetGameById");
 
             app.MapGet("/janidu", () => "Hello from backend!");
 
-            // POST: add new game
+            // POST: add new gameq
             app.MapPost("games", (CreateGameDto newGame) =>
             {
                 BackendDto game = new(
@@ -49,7 +49,8 @@ namespace backend.Endpoints
                 games.Add(game);
 
                 return Results.CreatedAtRoute("GetGameById", new { id = game.id }, game);
-            });
+
+            }).WithParameterValidation();
 
 
             //putgames
