@@ -1,3 +1,4 @@
+using backend.Dto;
 using Backend.dto;
 
 namespace backend.Endpoints
@@ -16,5 +17,73 @@ namespace backend.Endpoints
 
         // Example method to get all games
         public static IEnumerable<BackendDto> GetAllGames() => games;
+
+
+        public static WebApplication MapGamesEndpoints(this WebApplication app)
+        {
+
+            app.MapGet("/games", () => games);
+
+            app.MapGet("/games/{id}", (int id) =>
+            {
+
+                BackendDto? game = games.Find(game => game.id == id);
+                return (game == null) ? Results.NotFound() : Results.Ok(game);  //variable = (condition) ? expressionTrue :  expressionFalse;
+                                                                                //Short Hand If...Else (Ternary Operator)
+
+            });
+
+            app.MapGet("/janidu", () => "Hello from backend!");
+
+            // POST: add new game
+            app.MapPost("games", (CreateGameDto newGame) =>
+            {
+                BackendDto game = new(
+                    games.Count + 1,
+                    newGame.Name,
+                    newGame.Genre,
+                    newGame.Price,
+                    newGame.ReleaseDate
+                );
+
+                games.Add(game);
+
+                return Results.CreatedAtRoute("GetGameById", new { id = game.id }, game);
+            });
+
+
+            //putgames
+            app.MapPut("games/{id}", (int id, UpdateBackendDto updatedGame) =>
+            {
+
+                var index = games.FindIndex(game => game.id == id);
+
+                if (index == -1)
+                {
+                    return Results.NotFound();
+                }
+
+
+                games[index] = new BackendDto(
+
+                    id,
+                    updatedGame.Name,
+                    updatedGame.Genre,
+                    updatedGame.Price,
+                    updatedGame.ReleaseDate
+                );
+
+                return Results.NoContent();
+            });
+
+            app.MapDelete("games/{id}", (int id) =>
+            {
+                games.RemoveAll(game => game.id == id);
+                return Results.NoContent();
+            });
+
+            return app;
+
+        }
     }
 }
