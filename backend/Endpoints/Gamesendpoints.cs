@@ -55,7 +55,7 @@ namespace backend.Endpoints
 
 
             //putgames
-            group.MapPut("games/{id}", (int id, UpdateBackendDto updatedGame) =>
+            group.MapPut("/{id}", (int id, UpdateBackendDto updatedGame) =>
             {
 
                 var index = games.FindIndex(game => game.id == id);
