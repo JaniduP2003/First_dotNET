@@ -1,12 +1,14 @@
-using System;
 using backend.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Data;
 
-public class GameDataContext(DbContextOptions<GameDataContext> options) 
-: DbContext
+public class GameDataContext : DbContext
 {
-  public DbSet<Game> Games => Set<Game>();
-  public DbSet<Genre> Genres => Set<Genre>();
+    public GameDataContext(DbContextOptions<GameDataContext> options) : base(options)
+    {
+    }
+
+    public DbSet<Game> Games { get; set; }
+    public DbSet<Genre> Genres { get; set; }
 }
