@@ -8,3 +8,5 @@ public record class BackendDto(
     DateOnly ReleaseDate
 
 );
+
+//add comments in the hithub dto theory 
