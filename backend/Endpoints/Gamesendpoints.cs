@@ -30,10 +30,11 @@ namespace backend.Endpoints
 
             group.MapGet("/", () => games);
 
-            group.MapGet("/{id}", (int id) =>
+            //GET BY ID 
+            group.MapGet("/{id}", (int id , GameDataContext DbContext) => //injected the data context
             {
 
-                BackendDto? game = games.Find(game => game.id == id);
+                Game? game = DbContext.Games.Find(id);
                 return (game == null) ? Results.NotFound() : Results.Ok(game);  //variable = (condition) ? expressionTrue :  expressionFalse;
                                                                                 //Short Hand If...Else (Ternary Operator)
 
