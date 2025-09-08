@@ -59,25 +59,21 @@ namespace backend.Endpoints
 
 
             //putgames
-            group.MapPut("/{id}", (int id, UpdateBackendDto updatedGame) =>
+            group.MapPut("/{id}", (int id, UpdateBackendDto updatedGame , GameDataContext  DbContext) =>
             {
 
-                var index = games.FindIndex(game => game.id == id);
+                var existingGame = DbContext.Find(id);
 
-                if (index == -1)
+                if (existingGame is null)
                 {
                     return Results.NotFound();
                 }
 
-
-                games[index] = new BackendDto(
-
-                    id,
-                    updatedGame.Name,
-                    updatedGame.Genre,
-                    updatedGame.Price,
-                    updatedGame.ReleaseDate
-                );
+                //THIS IS HOW TO DO THE UPDATE 
+                DbContext.Entry(existingGame)
+                         .CurrentValues
+                         .setValues(updatedGame.ToEntity(id));
+                DbContext.SaveChanges();
 
                 return Results.NoContent();
             });

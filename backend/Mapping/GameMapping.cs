@@ -31,16 +31,28 @@ public static class GameMapping
         );
 
     }
-    
-     public static GameDTOdetails ToGameDetailsDto(this Game game)
-    {
-                return new(
-                    game.Id,
-                    game.Name,
-                    game.GenreId,
-                    game.Price,
-                    game.ReleaseDate
-                );
 
+    public static GameDTOdetails ToGameDetailsDto(this Game game)
+    {
+        return new(
+            game.Id,
+            game.Name,
+            game.GenreId,
+            game.Price,
+            game.ReleaseDate
+        );
+
+    }
+    
+      public static Game ToEntity(this UpdateBackendDto game , int id)
+    {
+        return new Game
+        {
+            Id = id,
+            Name = game.Name,
+            GenreId = game.GenreId,
+            Price = game.Price,
+            ReleaseDate = game.ReleaseDate
+        };
     }
 }

@@ -4,7 +4,7 @@ public record class UpdateBackendDto
 (
 
    string Name,
-    string Genre,
+    int GenreId,
     decimal Price,
     DateOnly ReleaseDate
     
