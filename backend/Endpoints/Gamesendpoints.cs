@@ -34,7 +34,7 @@ namespace backend.Endpoints
             {
 
                 Game? game = DbContext.Games.Find(id);
-                return (game == null) ? Results.NotFound() : Results.Ok(game);  //variable = (condition) ? expressionTrue :  expressionFalse;
+                return (game == null) ? Results.NotFound() : Results.Ok(game.ToGameDetailsDto());  //variable = (condition) ? expressionTrue :  expressionFalse;
                                                                                 //Short Hand If...Else (Ternary Operator)
 
             }).WithName("GetGameById");
@@ -53,7 +53,7 @@ namespace backend.Endpoints
                 DbContext.SaveChanges();                                          //SAVING THE CHAGES TO THE DATABASE
 
 
-                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game.ToDto());
+                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game.ToGameSummryDto());
 
             }).WithParameterValidation();
 
