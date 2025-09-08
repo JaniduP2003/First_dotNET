@@ -2,6 +2,7 @@ using backend.Data;
 using backend.Dto;
 using backend.Entities;
 using Backend.dto;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Endpoints
 {
@@ -41,17 +42,20 @@ namespace backend.Endpoints
             // POST: add new gameq
             group.MapPost("/", (CreateGameDto newGame , GameDataContext DbContext) =>
             {
-               Game game = new()
-               {
-                   Name = newGame.Name,
-                   Genre= DbContext.Genres.Find(newGame.GenreId),
-                   Price = newGame.Price,
-                   ReleaseDate = newGame.ReleaseDate  //comments on git
-               }
+                Game game = new()
+                {
+                    Name = newGame.Name,
+                    Genre = DbContext.Genres.Find(newGame.GenreId),
+                    GenreId = newGame.GenreId,
+                    Price = newGame.Price,
+                    ReleaseDate = newGame.ReleaseDate  //comments on git
+                };
 
-                games.Add(game);
+                //games.Add(game); OLD
+                DbContext.Games.Add(game);
+                DbContext.SaveChanges();
 
-                return Results.CreatedAtRoute("GetGameById", new { id = game.id }, game);
+                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game);
 
             }).WithParameterValidation();
 
