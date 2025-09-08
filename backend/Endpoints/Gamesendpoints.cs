@@ -1,6 +1,7 @@
 using backend.Data;
 using backend.Dto;
 using backend.Entities;
+using backend.Mapping;
 using Backend.dto;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,28 +43,17 @@ namespace backend.Endpoints
             // POST: add new gameq
             group.MapPost("/", (CreateGameDto newGame , GameDataContext DbContext) =>
             {
-                Game game = new()
-                {
-                    Name = newGame.Name,
-                    Genre = DbContext.Genres.Find(newGame.GenreId),
-                    GenreId = newGame.GenreId,
-                    Price = newGame.Price,
-                    ReleaseDate = newGame.ReleaseDate  //comments on git
-                };                                                                 //this is cration of THE ENTTITY 
 
+                Game game = newGame.ToEntity();    //the class is in MAPPING FOLDER
+                game.Genre = DbContext.Genres.Find(newGame.GenreId);
+
+            
                 //games.Add(game); OLD
                 DbContext.Games.Add(game);
                 DbContext.SaveChanges();                                          //SAVING THE CHAGES TO THE DATABASE
 
-                BackendDto createdGameDtoReturn = new(
-                    game.Id,
-                    game.Name,
-                    game.Genre!.Name,
-                    game.Price,
-                    game.ReleaseDate
-                );                                                                //CUSTOM RETURN TYPE
 
-                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, createdGameDtoReturn);
+                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game.ToDto());
 
             }).WithParameterValidation();
 
