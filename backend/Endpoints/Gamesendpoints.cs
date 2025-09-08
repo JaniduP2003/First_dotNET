@@ -46,7 +46,7 @@ namespace backend.Endpoints
                    Name = newGame.Name,
                    Genre= DbContext.Genres.Find(newGame.GenreId),
                    Price = newGame.Price,
-                   ReleaseDate = newGame.ReleaseDate
+                   ReleaseDate = newGame.ReleaseDate  //comments on git
                }
 
                 games.Add(game);
