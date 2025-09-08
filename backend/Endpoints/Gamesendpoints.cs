@@ -28,8 +28,7 @@ namespace backend.Endpoints
 
             var group = app.MapGroup("games").WithParameterValidation();
 
-            group.MapGet("/", () => games);
-
+            group.MapGet("/", () => games);  //dto IS  A DUMBED DOWN VERSION OF THE ENTITY WITH LESS INFOR AND LESS VERIABLES 
             //GET BY ID 
             group.MapGet("/{id}", (int id , GameDataContext DbContext) => //injected the data context
             {
