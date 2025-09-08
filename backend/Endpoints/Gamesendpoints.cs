@@ -62,7 +62,7 @@ namespace backend.Endpoints
             group.MapPut("/{id}", (int id, UpdateBackendDto updatedGame , GameDataContext  DbContext) =>
             {
 
-                var existingGame = DbContext.Find(id);
+                var existingGame = DbContext.Games.Find(id);
 
                 if (existingGame is null)
                 {
@@ -72,7 +72,7 @@ namespace backend.Endpoints
                 //THIS IS HOW TO DO THE UPDATE 
                 DbContext.Entry(existingGame)
                          .CurrentValues
-                         .setValues(updatedGame.ToEntity(id));
+                         .SetValues(updatedGame.ToEntity(id));
                 DbContext.SaveChanges();
 
                 return Results.NoContent();
