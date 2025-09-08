@@ -1,4 +1,6 @@
+using backend.Data;
 using backend.Dto;
+using backend.Entities;
 using Backend.dto;
 
 namespace backend.Endpoints
@@ -37,15 +39,15 @@ namespace backend.Endpoints
 
             
             // POST: add new gameq
-            group.MapPost("/", (CreateGameDto newGame) =>
+            group.MapPost("/", (CreateGameDto newGame , GameDataContext DbContext) =>
             {
-                BackendDto game = new(
-                    games.Count + 1,
-                    newGame.Name,
-                    newGame.Genre,
-                    newGame.Price,
-                    newGame.ReleaseDate
-                );
+               Game game = new()
+               {
+                   Name = newGame.Name,
+                   Genre= DbContext.Genres.Find(newGame.GenreId),
+                   Price = newGame.Price,
+                   ReleaseDate = newGame.ReleaseDate
+               }
 
                 games.Add(game);
 

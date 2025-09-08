@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Configuration Accesses your app’s configuration system, typically appsettings.json in .NET projects
 builder.Services.AddDbContext<GameDataContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));   //coments on git 
 
 var app = builder.Build();
 
