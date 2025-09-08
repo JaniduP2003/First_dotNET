@@ -55,7 +55,15 @@ namespace backend.Endpoints
                 DbContext.Games.Add(game);
                 DbContext.SaveChanges();
 
-                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game);
+                BackendDto createdGameDtoReturn = new(
+                    game.Id,
+                    game.Name,
+                    game.Genre!.Name,
+                    game.Price,
+                    game.ReleaseDate
+                );
+
+                return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, createdGameDtoReturn);
 
             }).WithParameterValidation();
 
