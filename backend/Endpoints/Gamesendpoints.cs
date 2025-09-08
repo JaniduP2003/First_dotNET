@@ -49,11 +49,11 @@ namespace backend.Endpoints
                     GenreId = newGame.GenreId,
                     Price = newGame.Price,
                     ReleaseDate = newGame.ReleaseDate  //comments on git
-                };
+                };                                                                 //this is cration of THE ENTTITY 
 
                 //games.Add(game); OLD
                 DbContext.Games.Add(game);
-                DbContext.SaveChanges();
+                DbContext.SaveChanges();                                          //SAVING THE CHAGES TO THE DATABASE
 
                 BackendDto createdGameDtoReturn = new(
                     game.Id,
@@ -61,7 +61,7 @@ namespace backend.Endpoints
                     game.Genre!.Name,
                     game.Price,
                     game.ReleaseDate
-                );
+                );                                                                //CUSTOM RETURN TYPE
 
                 return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, createdGameDtoReturn);
 
