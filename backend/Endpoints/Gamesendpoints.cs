@@ -82,9 +82,14 @@ namespace backend.Endpoints
                 return Results.NoContent();
             });
 
-            group.MapDelete("/{id}", (int id) =>
+            group.MapDelete("/{id}", (int id , GameDataContext DbContext) =>
             {
-                games.RemoveAll(game => game.id == id);
+                var del_id = DbContext.Games.Find(id);
+                if (del_id is null)
+                {
+                    return Results.NotFound();
+                }
+                DbContext.Games.Remove(del_id);
                 return Results.NoContent();
             });
 
