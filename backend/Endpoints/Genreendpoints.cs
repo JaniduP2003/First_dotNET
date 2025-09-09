@@ -14,7 +14,7 @@ public static class Genreendpoints
 
         groupe.MapGet("/", async (GameDataContext DbContext) =>
         {
-            await DbContext.Genres
+           return await DbContext.Genres
                 .Select(genre => genre.Todo())
                 .ToListAsync();
         });
