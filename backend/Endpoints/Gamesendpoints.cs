@@ -16,16 +16,19 @@ namespace backend.Endpoints
 
             var group = app.MapGroup("games").WithParameterValidation();
 
-            group.MapGet("/", (GameDataContext Dbcontext ) =>
-            Dbcontext.Games.Include(game => game.Genre).Select(game => game.ToGameSummryDto()));  //dto IS  A DUMBED DOWN VERSION OF THE ENTITY WITH LESS INFOR AND LESS VERIABLES
+            //GET ALL
+            group.MapGet("/", async (GameDataContext Dbcontext ) =>
+           await Dbcontext.Games.Include(game => game.Genre)
+                           .Select(game => game.ToGameSummryDto())
+                           .ToListAsync());  //dto IS  A DUMBED DOWN VERSION OF THE ENTITY WITH LESS INFOR AND LESS VERIABLES
 
 
 
             //GET BY ID 
-            group.MapGet("/{id}", (int id , GameDataContext DbContext) => //injected the data context
+            group.MapGet("/{id}", async(int id , GameDataContext DbContext) => //injected the data context
             {
 
-                Game? game = DbContext.Games.Find(id);
+                Game? game = await DbContext.Games.FindAsync(id);
                 return (game == null) ? Results.NotFound() : Results.Ok(game.ToGameDetailsDto());  //variable = (condition) ? expressionTrue :  expressionFalse;
                                                                                 //Short Hand If...Else (Ternary Operator)
 
@@ -33,7 +36,7 @@ namespace backend.Endpoints
 
             
             // POST: add new gameq
-            group.MapPost("/", (CreateGameDto newGame , GameDataContext DbContext) =>
+            group.MapPost("/", async (CreateGameDto newGame , GameDataContext DbContext) =>
             {
 
                 Game game = newGame.ToEntity();    //the class is in MAPPING FOLDER
@@ -42,7 +45,7 @@ namespace backend.Endpoints
             
                 //games.Add(game); OLD
                 DbContext.Games.Add(game);
-                DbContext.SaveChanges();                                          //SAVING THE CHAGES TO THE DATABASE
+                await DbContext.SaveChangesAsync();                                          //SAVING THE CHAGES TO THE DATABASE
 
 
                 return Results.CreatedAtRoute("GetGameById", new { id = game.Id }, game.ToGameSummryDto());
@@ -51,10 +54,10 @@ namespace backend.Endpoints
 
 
             //putgames
-            group.MapPut("/{id}", (int id, UpdateBackendDto updatedGame , GameDataContext  DbContext) =>
+            group.MapPut("/{id}", async (int id, UpdateBackendDto updatedGame , GameDataContext  DbContext) =>
             {
 
-                var existingGame = DbContext.Games.Find(id);
+                var existingGame = await DbContext.Games.FindAsync(id);
 
                 if (existingGame is null)
                 {
@@ -65,20 +68,21 @@ namespace backend.Endpoints
                 DbContext.Entry(existingGame)
                          .CurrentValues
                          .SetValues(updatedGame.ToEntity(id));
-                DbContext.SaveChanges();
+
+                await DbContext.SaveChangesAsync();
 
                 return Results.NoContent();
             });
 
-            group.MapDelete("/{id}", (int id , GameDataContext DbContext) =>
+            group.MapDelete("/{id}", async (int id , GameDataContext DbContext) =>
             {
-                var del_id = DbContext.Games.Find(id);
+                var del_id = await DbContext.Games.FindAsync(id);
                 if (del_id is null)
                 {
                     return Results.NotFound();
                 }
                 DbContext.Games.Remove(del_id);
-                DbContext.SaveChanges();
+                await DbContext.SaveChangesAsync();
                 return Results.NoContent();
             });
 
