@@ -90,6 +90,7 @@ namespace backend.Endpoints
                     return Results.NotFound();
                 }
                 DbContext.Games.Remove(del_id);
+                DbContext.SaveChanges();
                 return Results.NoContent();
             });
 
