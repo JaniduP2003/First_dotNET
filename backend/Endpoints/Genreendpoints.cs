@@ -6,7 +6,7 @@ using Npgsql.Replication;
 
 namespace backend.Endpoints;
 
-public class Genreendpoints
+public static class Genreendpoints
 {
     public static RouteGroupBuilder MapGenresEndpoints(this WebApplication app)
     {
