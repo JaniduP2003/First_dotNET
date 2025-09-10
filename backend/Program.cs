@@ -13,6 +13,8 @@ builder.Services.AddDbContext<GameDataContext>(options =>
 
 var app = builder.Build();
 
+app.MapGet("/hello", () => "Hello World!");
+
 
 app.MapGamesEndpoints();
 app.MapGenresEndpoints();
