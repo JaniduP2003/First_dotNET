@@ -1,4 +1,3 @@
-/home/janidu/Documents/GitHub/First_dotNET/backend/published/backend
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/appsettings.Development.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/appsettings.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/backend.dll

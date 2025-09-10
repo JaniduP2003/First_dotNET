@@ -1,7 +1,6 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/appsettings.Development.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/appsettings.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend.staticwebassets.endpoints.json
-/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend.deps.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend.runtimeconfig.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend.dll
