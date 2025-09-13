@@ -156,3 +156,16 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Release/net9.0/backend.pdb
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Release/net9.0/backend.genruntimeconfig.cache
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Release/net9.0/ref/backend.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/web.config
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/appsettings.Development.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/appsettings.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/backend.deps.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/backend.runtimeconfig.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/backend.staticwebassets.endpoints.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/backend
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/web.config
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/appsettings.Development.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/appsettings.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/backend.deps.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/backend.runtimeconfig.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Release/net9.0/published/published/backend.staticwebassets.endpoints.json
