@@ -1,4 +1,5 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/backend
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/web.config
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/web.config
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/published/web.config
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/appsettings.Development.json
@@ -13,6 +14,11 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/backend.deps.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/backend.runtimeconfig.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/backend.staticwebassets.endpoints.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/appsettings.Development.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/appsettings.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/backend.deps.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/backend.runtimeconfig.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/published/published/published/published/backend.staticwebassets.endpoints.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/backend.dll
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/backend.runtimeconfig.json
 /home/janidu/Documents/GitHub/First_dotNET/backend/published/backend.pdb
