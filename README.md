@@ -10,8 +10,62 @@ This project demonstrates a comprehensive PyTest testing suite for a .NET Core W
 - ✅ **Mocking** - Mocking external dependencies and API calls
 - ✅ **Test Coverage** - Measuring and reporting code coverage
 - ✅ **HTML Reporting** - Generating professional test reports
-- ✅ **CI Integration** - GitHub Actions workflow for automated testing
 - ✅ **Runnable Example** - Complete game service module with tests
+
+---
+
+## 📊 Coverage Reports (Industry Standard & Impressive!)
+
+### Where to Find Your Coverage Reports:
+
+**🎯 Interactive HTML Coverage Report (RECOMMENDED)**
+- **Location**: `htmlcov/index.html`
+- **How to view**: 
+  ```bash
+  xdg-open htmlcov/index.html  # Linux
+  open htmlcov/index.html      # macOS
+  ```
+- **Features**: 
+  - Visual line-by-line coverage
+  - Color-coded coverage indicators
+  - Shows exactly which lines were executed
+  - Professional presentation for assignments
+
+**📟 Terminal Coverage Report**
+- Shows coverage summary after running: `pytest test_unit.py -v`
+- Displays at the end of test output (not visible when piping to `head`)
+
+### How to Generate/View Coverage:
+
+```bash
+# Option 1: Run tests and see terminal coverage at the end
+pytest test_unit.py -v
+
+# Option 2: Generate fresh HTML coverage report
+pytest --cov=. --cov-report=html --cov-report=term-missing
+
+# Option 3: View existing HTML coverage report
+xdg-open htmlcov/index.html
+
+# Option 4: Generate coverage report with missing lines highlighted
+pytest --cov=game_service --cov-report=term-missing
+```
+
+**⚠️ Important**: When you run `pytest test_unit.py -v --tb=short | head -100`, the `| head -100` pipe cuts off the output before the coverage report appears. The coverage report prints **at the very end** of the test run, so use the HTML report or run without piping to see it!
+
+### Example Coverage Output:
+
+When you run `pytest test_unit.py -v` (without piping), you'll see this at the end:
+
+```
+---------- coverage: platform linux, python 3.x.x -----------
+Name                      Stmts   Miss  Cover
+---------------------------------------------
+game_service.py              XX      X    XX%
+test_unit.py                XXX      0   100%
+---------------------------------------------
+TOTAL                       XXX      X    XX%
+```
 
 ---
 
@@ -19,18 +73,16 @@ This project demonstrates a comprehensive PyTest testing suite for a .NET Core W
 
 ```
 backend/
-├── game_service.py              # Main application module (GameService & Calculator)
+├── game_service.py              # Main application module (GameService class)
 ├── conftest.py                  # PyTest fixtures and configuration
 ├── test_unit.py                 # Comprehensive unit tests
 ├── test_api_endpoints.py        # Integration tests for API
 ├── requirements.txt             # Python dependencies
 ├── pytest.ini                   # PyTest configuration
-├── .coveragerc                  # Coverage configuration
-├── README.md                    # This file
-├── PYTEST_GUIDE.md             # Detailed testing guide
-└── .github/
-    └── workflows/
-        └── pytest-ci.yml        # GitHub Actions CI workflow
+├── pytest.ini                   # PyTest configuration
+├── PYTEST_GUIDE.md              # Detailed testing guide
+└── htmlcov/                     # Coverage HTML reports
+    └── index.html               # Main coverage report
 ```
 
 ---
@@ -197,7 +249,7 @@ assert "error message" in str(exc_info.value)
 ```
 
 **Examples in code:**
-- `TestCalculator`: Basic arithmetic assertions
+- `TestGameServiceBasics`: Game service method assertions
 - `TestComplexAssertions`: Advanced assertion patterns
 - `TestExceptionHandling`: Exception testing
 
@@ -222,10 +274,10 @@ def test_config():
 
 **Examples in code:**
 - `game_service`: Provides GameService instance
-- `calculator`: Provides Calculator instance
 - `sample_game_data`: Test data fixture
 - `sample_games_list`: List of test games
 - `test_config`: Session-scoped config
+- `temp_game_data`: Temporary file fixture
 
 ### 3. Parameterized Tests
 
@@ -240,11 +292,10 @@ def test_addition(calculator, a, b, expected):
 ```
 
 **Examples in code:**
-- `TestParameterizedCalculator`: 20+ parameterized test cases
-- `test_addition_parametrized`: Multiple input combinations
-- `test_division_parametrized`: Division scenarios
-- `test_power_parametrized`: Power calculations
-- `test_calculate_game_score`: Game scoring variations
+- `TestGameServiceBasics`: 15+ parameterized test cases
+- `test_calculate_game_score`: Game score calculations with multipliers
+- `test_format_game_name`: Game name formatting variations
+- `test_is_game_expensive`: Price threshold testing
 
 ### 4. Mocking
 
@@ -273,13 +324,13 @@ def test_with_mocker(mocker):
 
 ```python
 @pytest.mark.unit
-class TestCalculator:
-    """Unit tests."""
+class TestGameService:
+    """Unit tests for game service."""
     pass
 
 @pytest.mark.integration
-class TestAPI:
-    """Integration tests."""
+def test_api_endpoint():
+    """Integration test."""
     pass
 
 @pytest.mark.slow
@@ -290,70 +341,29 @@ def test_slow_operation():
 
 ---
 
-## 🔄 CI/CD Integration
-
-### GitHub Actions Workflow
-
-The `.github/workflows/pytest-ci.yml` file defines a complete CI pipeline:
-
-**Features:**
-- ✅ Runs on multiple Python versions (3.9, 3.10, 3.11, 3.12)
-- ✅ Caches pip dependencies for faster builds
-- ✅ Runs unit tests with coverage
-- ✅ Runs integration tests (with .NET API)
-- ✅ Generates coverage reports
-- ✅ Uploads test artifacts
-- ✅ Creates test summaries
-
-**Workflow Jobs:**
-1. **test**: Runs unit tests on multiple Python versions
-2. **integration-test**: Runs integration tests with live API
-3. **coverage-report**: Generates and uploads coverage reports
-
-### Triggering the Workflow
-
-```bash
-# Push to trigger CI
-git add .
-git commit -m "Add comprehensive PyTest suite"
-git push origin test-api-pytest
-
-# Manual trigger via GitHub Actions UI
-# Go to: Repository → Actions → PyTest CI → Run workflow
-```
-
-### Viewing Results
-
-1. Go to your GitHub repository
-2. Click on "Actions" tab
-3. Select the latest workflow run
-4. View test results, coverage, and artifacts
-
----
-
-## 📖 Test Examples
+## 🎯 Key PyTest Features Demonstrated
 
 ### Example 1: Basic Assertion Test
 
 ```python
-def test_addition(calculator):
-    """Test basic addition."""
-    result = calculator.add(5, 3)
-    assert result == 8
-    assert result > 0
+def test_format_game_name(game_service):
+    """Test game name formatting."""
+    result = game_service.format_game_name("super mario")
+    assert result == "Super Mario"
+    assert result.startswith("Super")
 ```
 
 ### Example 2: Parameterized Test
 
 ```python
-@pytest.mark.parametrize("a,b,expected", [
-    (2, 3, 5),
-    (10, 5, 15),
-    (-1, 1, 0),
+@pytest.mark.parametrize("base_score,multiplier,expected", [
+    (100, 1.0, 100.0),
+    (100, 2.0, 200.0),
+    (50, 1.5, 75.0),
 ])
-def test_addition_params(calculator, a, b, expected):
-    """Test addition with multiple inputs."""
-    assert calculator.add(a, b) == expected
+def test_calculate_game_score(game_service, base_score, multiplier, expected):
+    """Test game score calculation with multiple inputs."""
+    assert game_service.calculate_game_score(base_score, multiplier) == expected
 ```
 
 ### Example 3: Mocking Test
@@ -362,7 +372,10 @@ def test_addition_params(calculator, a, b, expected):
 @patch('game_service.requests.get')
 def test_get_games_mocked(mock_get, game_service):
     """Test API call with mock."""
-    mock_get.return_value.json.return_value = [{"id": 1}]
+    mock_response = Mock()
+    mock_response.json.return_value = [{"id": 1, "name": "Game 1"}]
+    mock_get.return_value = mock_response
+    
     result = game_service.get_all_games()
     assert len(result) == 1
     mock_get.assert_called_once()
@@ -371,10 +384,10 @@ def test_get_games_mocked(mock_get, game_service):
 ### Example 4: Exception Test
 
 ```python
-def test_division_by_zero(calculator):
+def test_negative_score_raises_error(game_service):
     """Test exception handling."""
-    with pytest.raises(ValueError, match="divide by zero"):
-        calculator.divide(10, 0)
+    with pytest.raises(ValueError, match="Base score cannot be negative"):
+        game_service.calculate_game_score(-10, 2.0)
 ```
 
 ---
@@ -386,25 +399,27 @@ After running tests with coverage, you should see:
 ```
 Name                      Stmts   Miss  Cover   Missing
 -------------------------------------------------------
-game_service.py              45      2    96%   78-79
-test_unit.py                180      0   100%
+game_service.py              XX      X    XX%   XX-XX
+test_unit.py                XXX      0   100%
 -------------------------------------------------------
-TOTAL                       225      2    99%
+TOTAL                       XXX      X    XX%
 ```
+
+**Note:** Actual coverage percentages will vary based on which code paths are executed during tests.
 
 ---
 
 ## 🎓 Assignment Checklist
 
-- [x] **Assertions**: Multiple types demonstrated in `TestCalculator` and `TestComplexAssertions`
-- [x] **Fixtures**: 10+ fixtures in `conftest.py`
-- [x] **Parameterized Tests**: 6+ parameterized test methods with 30+ test cases
+- [x] **Assertions**: Multiple types demonstrated in `TestGameServiceBasics` and `TestComplexAssertions`
+- [x] **Fixtures**: Multiple fixtures in `conftest.py` (game_service, sample_game_data, sample_games_list, test_config, temp_game_data)
+- [x] **Parameterized Tests**: 3+ parameterized test methods with 15+ test cases
 - [x] **Mocking**: 5+ mocking examples using both `unittest.mock` and `pytest-mock`
-- [x] **Test Coverage**: Configured with `.coveragerc` and `pytest.ini`
-- [x] **HTML Reporting**: Configured in `pytest.ini` with `pytest-html`
-- [x] **CI Integration**: Complete GitHub Actions workflow in `.github/workflows/pytest-ci.yml`
-- [x] **Runnable Example**: `game_service.py` with `GameService` and `Calculator` classes
-- [x] **Documentation**: Comprehensive README with examples
+- [x] **Test Coverage**: Configured with `pytest.ini` and `--cov` flags
+- [x] **HTML Reporting**: Coverage reports in `htmlcov/` directory
+- [x] **Test Organization**: Tests organized by feature with markers (@pytest.mark.unit, @pytest.mark.slow, @pytest.mark.integration)
+- [x] **Runnable Example**: `game_service.py` with complete `GameService` class
+- [x] **Documentation**: Comprehensive PYTEST_GUIDE.md with examples
 
 ---
 
@@ -462,8 +477,6 @@ pytest -q
 - [PyTest Documentation](https://docs.pytest.org/)
 - [pytest-cov Documentation](https://pytest-cov.readthedocs.io/)
 - [pytest-mock Documentation](https://pytest-mock.readthedocs.io/)
-- [pytest-html Documentation](https://pytest-html.readthedocs.io/)
-- [GitHub Actions Documentation](https://docs.github.com/en/actions)
 
 ---
 
@@ -493,7 +506,20 @@ pip install pytest-html
 pytest --html=reports/test_report.html --self-contained-html
 ```
 
+---
 
+## 📝 Assignment Submission
+
+For your university assignment, include:
+
+1. ✅ This PYTEST_GUIDE.md file
+2. ✅ All source code files (`game_service.py`, `test_unit.py`, `conftest.py`, etc.)
+3. ✅ Configuration files (`pytest.ini`, `requirements.txt`)
+4. ✅ Screenshots of:
+   - Test execution output (`pytest test_unit.py -v`)
+   - Coverage report HTML (`htmlcov/index.html`)
+   - Terminal showing all 36 tests passing
+5. ✅ Brief explanation of each PyTest feature demonstrated
 
 ---
 
@@ -508,4 +534,3 @@ This project is for educational purposes.
 ---
 
 **Happy Testing! 🎉**
-
