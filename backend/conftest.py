@@ -15,8 +15,10 @@ def base_url():
     Fixture providing the base URL of the running API.
     
     This can be overridden by setting the BASE_URL environment variable.
+    Default is 8080 for local Docker, or 5055 for dotnet run.
     """
-    return "http://localhost:8080"
+    import os
+    return os.getenv("BASE_URL", "http://localhost:8080")
 
 
 @pytest.fixture
