@@ -57,7 +57,7 @@ jobs:
             echo "Backend is ready!"
             break
           fi
-          echo "Waiting for backend... ($i/30)"
+          echo "Waiting for backend... ($i/30) "
           sleep 2
         done
     
