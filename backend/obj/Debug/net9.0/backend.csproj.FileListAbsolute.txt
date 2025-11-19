@@ -175,3 +175,9 @@
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/backend.pdb
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/backend.genruntimeconfig.cache
 /home/janidu/Documents/GitHub/First_dotNET/backend/obj/Debug/net9.0/ref/backend.dll
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/web.config
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/appsettings.Development.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/appsettings.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/backend.deps.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/backend.runtimeconfig.json
+/home/janidu/Documents/GitHub/First_dotNET/backend/bin/Debug/net9.0/published/published/published/published/backend.staticwebassets.endpoints.json
