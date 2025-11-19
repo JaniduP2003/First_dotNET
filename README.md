@@ -409,19 +409,7 @@ TOTAL                       XXX      X    XX%
 
 ---
 
-## 🎓 Assignment Checklist
 
-- [x] **Assertions**: Multiple types demonstrated in `TestGameServiceBasics` and `TestComplexAssertions`
-- [x] **Fixtures**: Multiple fixtures in `conftest.py` (game_service, sample_game_data, sample_games_list, test_config, temp_game_data)
-- [x] **Parameterized Tests**: 3+ parameterized test methods with 15+ test cases
-- [x] **Mocking**: 5+ mocking examples using both `unittest.mock` and `pytest-mock`
-- [x] **Test Coverage**: Configured with `pytest.ini` and `--cov` flags
-- [x] **HTML Reporting**: Coverage reports in `htmlcov/` directory
-- [x] **Test Organization**: Tests organized by feature with markers (@pytest.mark.unit, @pytest.mark.slow, @pytest.mark.integration)
-- [x] **Runnable Example**: `game_service.py` with complete `GameService` class
-- [x] **Documentation**: Comprehensive PYTEST_GUIDE.md with examples
-
----
 
 ## 🛠️ Useful Commands Reference
 
@@ -508,18 +496,7 @@ pytest --html=reports/test_report.html --self-contained-html
 
 ---
 
-## 📝 Assignment Submission
 
-For your university assignment, include:
-
-1. ✅ This PYTEST_GUIDE.md file
-2. ✅ All source code files (`game_service.py`, `test_unit.py`, `conftest.py`, etc.)
-3. ✅ Configuration files (`pytest.ini`, `requirements.txt`)
-4. ✅ Screenshots of:
-   - Test execution output (`pytest test_unit.py -v`)
-   - Coverage report HTML (`htmlcov/index.html`)
-   - Terminal showing all 36 tests passing
-5. ✅ Brief explanation of each PyTest feature demonstrated
 
 ---
 
