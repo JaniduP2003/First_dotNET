@@ -1,7 +1,12 @@
 """
-PyTest test suite for .NET Core Web API endpoints.
+PyTest Integration Tests for .NET Core Web API endpoints.
 
-This module contains black-box API tests for the /games and /genres endpoints.
+This module contains integration tests for the /games and /genres endpoints.
+These tests demonstrate:
+- Integration testing with real API
+- Fixtures for test configuration
+- Assertions on HTTP responses
+- Mocking error scenarios
 """
 
 import pytest
@@ -9,27 +14,7 @@ import requests
 from unittest.mock import Mock, patch
 
 
-@pytest.fixture
-def base_url():
-    """
-    Fixture providing the base URL of the running API.
-    
-    Modify this URL if your API runs on a different host or port.
-    """
-    return "http://localhost:8080"
-
-
-@pytest.fixture
-def api_headers():
-    """
-    Fixture providing common headers for API requests.
-    """
-    return {
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-    }
-
-
+@pytest.mark.integration
 class TestGamesEndpoint:
     """Test suite for the /games endpoint."""
     
@@ -128,6 +113,7 @@ class TestGamesEndpoint:
             requests.get(f"{base_url}/games", headers=api_headers)
 
 
+@pytest.mark.integration
 class TestGenresEndpoint:
     """Test suite for the /genres endpoint."""
     
@@ -159,6 +145,7 @@ class TestGenresEndpoint:
         )
 
 
+@pytest.mark.integration
 class TestAPIHealthCheck:
     """Test suite for general API health and availability."""
     
