@@ -10,80 +10,71 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-    
+        # Keep this only if you really want to test multiple Python versions.
+        python-version: ['3.11']
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f backend/requirements.txt ]; then
-          cd backend
-          pip install -r requirements.txt
-        else
-          echo "No requirements.txt found, skipping Python dependencies"
-        fi
-    
-    - name: Run unit tests with coverage
-      run: |
-        cd backend
-        if [ -f test_unit.py ]; then
-          pytest test_unit.py -v --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
-        else
-          echo "No unit tests found, skipping"
-        fi
-      continue-on-error: true
-    
-    - name: Run linting (optional)
-      continue-on-error: true
-      run: |
-        cd backend
-        pip install flake8
-        if [ -f game_service.py ]; then
-          flake8 game_service.py --max-line-length=100 --ignore=E501,W503
-        fi
-    
-    - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v4
-      if: hashFiles('backend/coverage.xml') != ''
-      with:
-        file: ./backend/coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-    
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results-${{ matrix.python-version }}
-        path: |
-          backend/htmlcov/
-          backend/reports/
-          backend/coverage.xml
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements.txt found, skipping Python dependencies"
+          fi
+
+      - name: Run unit tests with coverage
+        working-directory: backend
+        run: |
+          if [ -f test_unit.py ]; then
+            pytest test_unit.py -v --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
+          else
+            echo "No unit tests found, skipping"
+          fi
+
+      - name: Upload coverage reports to Codecov
+        if: hashFiles('backend/coverage.xml') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./backend/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.python-version }}
+          path: |
+            backend/htmlcov/
+            backend/reports/
+            backend/coverage.xml
 
   integration-test:
     runs-on: ubuntu-latest
     needs: test
-    
+
     services:
       postgres:
         image: postgres:15
@@ -98,211 +89,207 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-    
-    - name: Restore dependencies
-      run: |
-        cd backend
-        dotnet restore
-    
-    - name: Build project
-      run: |
-        cd backend
-        dotnet build --no-restore --configuration Release
-    
-    - name: Wait for PostgreSQL to be ready
-      run: |
-        echo "Waiting for PostgreSQL to be ready..."
-        for i in {1..30}; do
-          if pg_isready -h localhost -p 5432 -U testuser > /dev/null 2>&1; then
-            echo "PostgreSQL is ready!"
-            exit 0
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore .NET dependencies
+        working-directory: backend
+        run: dotnet restore
+
+      - name: Build project
+        working-directory: backend
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U testuser > /dev/null 2>&1; then
+              echo "PostgreSQL is ready!"
+              exit 0
+            fi
+            echo "Attempt $i: PostgreSQL not ready yet, waiting..."
+            sleep 2
+          done
+          echo "PostgreSQL failed to start"
+          exit 1
+
+      - name: Apply database migrations
+        env:
+          ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
+        working-directory: backend
+        run: |
+          dotnet tool restore || true
+          dotnet ef database update --no-build --configuration Release || echo "Migration failed or not needed"
+
+      - name: Start .NET API (background)
+        env:
+          ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
+          ASPNETCORE_ENVIRONMENT: Development
+          ASPNETCORE_URLS: "http://0.0.0.0:8080"
+        working-directory: backend
+        run: |
+          echo "Starting .NET API..."
+          nohup dotnet run --no-build --configuration Release > api.log 2>&1 &
+          echo $! > api_pid.txt
+          echo "API started with PID $(cat api_pid.txt)"
+          sleep 15
+
+      - name: Check API logs (early)
+        working-directory: backend
+        run: |
+          if [ -f api.log ]; then
+            echo "=== Initial API Logs ==="
+            cat api.log
           fi
-          echo "Attempt $i: PostgreSQL not ready yet, waiting..."
-          sleep 2
-        done
-        echo "PostgreSQL failed to start"
-        exit 1
-    
-    - name: Apply database migrations
-      env:
-        ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
-      run: |
-        cd backend
-        dotnet ef database update --no-build --configuration Release || echo "Migration failed or not needed"
-    
-    - name: Start .NET API (background)
-      env:
-        ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
-        ASPNETCORE_ENVIRONMENT: Development
-        ASPNETCORE_URLS: "http://0.0.0.0:8080"
-      run: |
-        cd backend
-        echo "Starting .NET API..."
-        nohup dotnet run --no-build --configuration Release > api.log 2>&1 &
-        echo $! > api_pid.txt
-        echo "API started with PID $(cat api_pid.txt)"
-        sleep 10
-    
-    - name: Check API logs (early)
-      run: |
-        cd backend
-        if [ -f api.log ]; then
-          echo "=== Initial API Logs ==="
-          cat api.log
-        fi
-    
-    - name: Wait for API to be ready
-      run: |
-        echo "Waiting for API to start..."
-        API_URL="http://localhost:8080"
-        
-        for i in {1..60}; do
-          # Try health endpoint first, fall back to games endpoint
-          if curl -f -s "${API_URL}/health" > /dev/null 2>&1; then
-            echo "API health check passed!"
-            curl -s "${API_URL}/health"
-            exit 0
-          elif curl -f -s "${API_URL}/games" > /dev/null 2>&1; then
-            echo "API is ready (games endpoint)!"
-            exit 0
-          elif curl -s "${API_URL}" > /dev/null 2>&1; then
-            echo "API is responding on root endpoint!"
-            exit 0
-          fi
-          
-          echo "Attempt $i: API not ready yet, waiting..."
-          sleep 2
-        done
-        
-        echo "API failed to start within timeout. Final diagnostics:"
-        cd backend
-        
-        echo "=== Process check ==="
-        if [ -f api_pid.txt ]; then
-          PID=$(cat api_pid.txt)
-          ps aux | grep $PID || echo "Process not found"
-        fi
-        
-        echo "=== Port check ==="
-        netstat -tlnp | grep 8080 || echo "Port 8080 not listening"
-        
-        echo "=== Final API Logs ==="
-        if [ -f api.log ]; then
-          tail -200 api.log
-        fi
-        
-        exit 1
-    
-    - name: Test API endpoint manually
-      run: |
-        echo "Testing API endpoints..."
-        curl -v http://localhost:8080/games || true
-        curl -v http://localhost:8080/health || true
-    
-    - name: Set up Python for integration tests
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    
-    - name: Install Python dependencies for integration tests
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f backend/requirements.txt ]; then
+
+      - name: Wait for API to be ready
+        run: |
+          echo "Waiting for API to start..."
+          API_URL="http://localhost:8080"
+
+          for i in {1..60}; do
+            if curl -f -s "${API_URL}/health" > /dev/null 2>&1; then
+              echo "API health check passed!"
+              curl -s "${API_URL}/health" || true
+              exit 0
+            elif curl -f -s "${API_URL}/games" > /dev/null 2>&1; then
+              echo "API is ready (games endpoint)!"
+              exit 0
+            elif curl -s "${API_URL}" > /dev/null 2>&1; then
+              echo "API is responding on root endpoint!"
+              exit 0
+            fi
+
+            echo "Attempt $i: API not ready yet, waiting..."
+            sleep 2
+          done
+
+          echo "API failed to start within timeout. Final diagnostics:"
           cd backend
-          pip install -r requirements.txt
-        fi
-        pip install pytest requests
-    
-    - name: Run integration tests
-      run: |
-        cd backend
-        if [ -f test_api_endpoints.py ]; then
-          pytest test_api_endpoints.py -v -m integration --tb=short
-        else
-          echo "No integration tests found"
-        fi
-      continue-on-error: true
-    
-    - name: Check API logs (final)
-      if: always()
-      run: |
-        cd backend
-        if [ -f api.log ]; then
+
+          echo "=== Process check ==="
+          if [ -f api_pid.txt ]; then
+            PID=$(cat api_pid.txt)
+            ps aux | grep $PID || echo "Process not found"
+          fi
+
+          echo "=== Port check ==="
+          ss -tlnp | grep 8080 || echo "Port 8080 not listening"
+
           echo "=== Final API Logs ==="
-          cat api.log
-        fi
-    
-    - name: Stop .NET API
-      if: always()
-      run: |
-        if [ -f backend/api_pid.txt ]; then
-          PID=$(cat backend/api_pid.txt)
-          kill $PID || true
-          sleep 2
-          kill -9 $PID 2>/dev/null || true
-        fi
-    
-    - name: Upload integration test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: integration-test-results
-        path: |
-          backend/reports/
-          backend/api.log
+          if [ -f api.log ]; then
+            tail -200 api.log
+          fi
+
+          exit 1
+
+      - name: Test API endpoint manually
+        run: |
+          echo "Testing API endpoints..."
+          curl -v http://localhost:8080/games || true
+          curl -v http://localhost:8080/health || true
+
+      - name: Set up Python for integration tests
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies for integration tests
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          pip install pytest requests
+
+      - name: Run integration tests
+        working-directory: backend
+        run: |
+          if [ -f test_api_endpoints.py ]; then
+            pytest test_api_endpoints.py -v -m integration --tb=short
+          else
+            echo "No integration tests found"
+          fi
+
+      - name: Check API logs (final)
+        if: always()
+        working-directory: backend
+        run: |
+          if [ -f api.log ]; then
+            echo "=== Final API Logs ==="
+            cat api.log
+          fi
+
+      - name: Stop .NET API
+        if: always()
+        run: |
+          if [ -f backend/api_pid.txt ]; then
+            PID=$(cat backend/api_pid.txt)
+            kill $PID || true
+            sleep 2
+            kill -9 $PID 2>/dev/null || true
+          fi
+
+      - name: Upload integration test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: |
+            backend/reports/
+            backend/api.log
 
   coverage-report:
     runs-on: ubuntu-latest
     needs: test
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f backend/requirements.txt ]; then
-          cd backend
-          pip install -r requirements.txt
-        fi
-    
-    - name: Generate coverage report
-      run: |
-        cd backend
-        if [ -f test_unit.py ]; then
-          pytest test_unit.py --cov=. --cov-report=html --cov-report=term
-        else
-          echo "No unit tests to generate coverage for"
-        fi
-      continue-on-error: true
-    
-    - name: Upload coverage HTML report
-      uses: actions/upload-artifact@v4
-      if: hashFiles('backend/htmlcov/') != ''
-      with:
-        name: coverage-report
-        path: backend/htmlcov/
-    
-    - name: Coverage summary
-      run: |
-        cd backend
-        echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
-        coverage report >> $GITHUB_STEP_SUMMARY 2>&1 || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
-        echo '```' >> $GITHUB_STEP_SUMMARY
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Generate coverage report
+        working-directory: backend
+        run: |
+          if [ -f test_unit.py ]; then
+            pytest test_unit.py --cov=. --cov-report=html --cov-report=term
+          else
+            echo "No unit tests to generate coverage for"
+          fi
+
+      - name: Upload coverage HTML report
+        if: hashFiles('backend/htmlcov/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/htmlcov/
+
+      - name: Coverage summary
+        working-directory: backend
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          coverage report >> $GITHUB_STEP_SUMMARY 2>&1 || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
