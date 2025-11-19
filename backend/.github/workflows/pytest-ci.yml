@@ -2,9 +2,9 @@ name: PyTest CI with Coverage
 
 on:
   push:
-    branches: [ main, develop, test-api-pytest ]
+    branches: [ '**' ]  # Run on push to any branch
   pull_request:
-    branches: [ main, develop ]
+    branches: [ '**' ]  # Run on pull request to any branch
   workflow_dispatch:
 
 jobs:
