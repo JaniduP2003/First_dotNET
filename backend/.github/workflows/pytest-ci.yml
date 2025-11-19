@@ -1,386 +1,96 @@
-name: PyTest CI with Coverage
+name: Backend CI with Pytest
 
 on:
   push:
-    branches: [ '**' ]
   pull_request:
-    branches: [ '**' ]
-  workflow_dispatch:
 
 jobs:
-  # Job 1: Run Mock/Unit Tests First
-  unit-tests:
+  build-and-test:
     runs-on: ubuntu-latest
-    name: Unit Tests (Mock)
-
-    strategy:
-      matrix:
-        python-version: ['3.11']
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install Python dependencies
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            echo "No requirements.txt found, skipping Python dependencies"
+    # Checkout the repository
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Setup .NET
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    # Restore .NET dependencies
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    # Build the .NET backend
+    - name: Build backend
+      run: dotnet build --no-restore --configuration Release
+    
+    # Setup Python for pytest
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    # Install Python dependencies
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    # Start the .NET backend in the background
+    - name: Start backend server
+      run: |
+        dotnet run --no-build --configuration Release &
+        echo $! > backend.pid
+        sleep 10
+      env:
+        ASPNETCORE_ENVIRONMENT: Development
+        ASPNETCORE_URLS: http://localhost:5000
+    
+    # Wait for backend to be ready
+    - name: Wait for backend to be ready
+      run: |
+        for i in {1..30}; do
+          if curl -s http://localhost:5000/health > /dev/null 2>&1 || curl -s http://localhost:5000 > /dev/null 2>&1; then
+            echo "Backend is ready!"
+            break
           fi
-
-      - name: Run unit tests with coverage
-        working-directory: backend
-        run: |
-          if [ -f test_unit.py ]; then
-            pytest test_unit.py -v --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing
-          else
-            echo "No unit tests found, skipping"
-          fi
-
-      - name: Upload coverage reports to Codecov
-        if: hashFiles('backend/coverage.xml') != ''
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./backend/coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
-
-      - name: Upload unit test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results-${{ matrix.python-version }}
-          path: |
-            backend/htmlcov/
-            backend/reports/
-            backend/coverage.xml
-
-  # Job 2: Build .NET Backend with Database
-  build-backend:
-    runs-on: ubuntu-latest
-    needs: unit-tests
-    name: Build .NET Backend
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Cache .NET packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('backend/**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Restore .NET dependencies
-        working-directory: backend
-        run: |
-          echo "Restoring .NET dependencies..."
-          dotnet restore
-
-      - name: Build .NET project
-        working-directory: backend
-        run: |
-          echo "Building .NET project in Release configuration..."
-          dotnet build --no-restore --configuration Release
-
-      - name: Wait for PostgreSQL to be ready
-        run: |
-          echo "Waiting for PostgreSQL to be ready..."
-          for i in {1..30}; do
-            if pg_isready -h localhost -p 5432 -U testuser > /dev/null 2>&1; then
-              echo "PostgreSQL is ready!"
-              exit 0
-            fi
-            echo "Attempt $i: PostgreSQL not ready yet, waiting..."
-            sleep 2
-          done
-          echo "PostgreSQL failed to start"
-          exit 1
-
-      - name: Install EF Core tools
-        run: |
-          dotnet tool install --global dotnet-ef || dotnet tool update --global dotnet-ef
-          echo "EF Core tools installed/updated"
-
-      - name: Apply database migrations
-        env:
-          ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
-        working-directory: backend
-        run: |
-          echo "Applying database migrations..."
-          dotnet ef database update --no-build --configuration Release || echo "Migration failed or not needed"
-
-      - name: Verify database setup
-        run: |
-          echo "Verifying database setup..."
-          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "\dt" || true
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dotnet-build
-          path: |
-            backend/bin/Release/
-            backend/obj/
-          retention-days: 1
-
-  # Job 3: Run Integration Tests on Built Backend
-  integration-tests:
-    runs-on: ubuntu-latest
-    needs: build-backend
-    name: Integration Tests (API)
-
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '9.0.x'
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: dotnet-build
-          path: backend/
-
-      - name: Restore .NET dependencies (for running)
-        working-directory: backend
-        run: dotnet restore
-
-      - name: Wait for PostgreSQL with better verification
-        run: |
-          echo "Waiting for PostgreSQL to be ready..."
-          for i in {1..30}; do
-            # Test both connection methods
-            if PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "SELECT 1;" > /dev/null 2>&1; then
-              echo "PostgreSQL is ready and accepting connections!"
-              exit 0
-            fi
-            echo "Attempt $i: Waiting for PostgreSQL..."
-            sleep 2
-          done
-          echo "❌ PostgreSQL failed to become ready"
-          exit 1
-
-      - name: Test database connection
-        run: |
-          echo "Testing database connection..."
-          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "\l" || echo "Database connection test failed"
-
-      - name: Apply database migrations
-        env:
-          ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
-        working-directory: backend
-        run: |
-          echo "Applying database migrations..."
-          dotnet ef database update --no-build --configuration Release --verbose
-
-      - name: Start .NET API with proper connection string
-        env:
-          ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
-          ASPNETCORE_ENVIRONMENT: Development
-          ASPNETCORE_URLS: "http://0.0.0.0:8080"
-        working-directory: backend
-        run: |
-          echo "Starting .NET API..."
-          echo "Using connection string: $ConnectionStrings__PostgresConnection"
-          
-          # Start the API in background
-          dotnet run --no-build --configuration Release > api.log 2>&1 &
-          API_PID=$!
-          echo $API_PID > api_pid.txt
-          echo "API started with PID $API_PID"
-          
-          # Wait for API to start with better health checks
-          echo "Waiting for API to start..."
-          for i in {1..60}; do
-            # Check if process is still running
-            if ! kill -0 $API_PID 2>/dev/null; then
-              echo "❌ API process died"
-              cat api.log
-              exit 1
-            fi
-            
-            # Try multiple endpoints
-            if curl -f -s http://localhost:8080/health > /dev/null 2>&1 || \
-               curl -f -s http://localhost:8080/games > /dev/null 2>&1 || \
-               curl -f -s http://localhost:8080/ > /dev/null 2>&1 || \
-               curl -f -s http://localhost:8080/swagger > /dev/null 2>&1; then
-              echo "✅ API is ready after $i seconds!"
-              
-              # Test database connectivity through API
-              echo "Testing API database connectivity..."
-              curl -s http://localhost:8080/health || curl -s http://localhost:8080/games || true
-              exit 0
-            fi
-            echo "Attempt $i: API not ready yet, waiting..."
-            sleep 2
-          done
-          
-          echo "❌ API failed to start within 120 seconds"
-          echo "=== API Logs ==="
-          cat api.log
-          exit 1
-
-      - name: Set up Python for integration tests
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install Python test dependencies
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          pip install pytest requests
-
-      - name: Run integration tests on built backend
-        working-directory: backend
-        env:
-          API_BASE_URL: "http://localhost:8080"
-        run: |
-          echo "Running integration tests against the built API..."
-          if [ -f test_api_endpoints.py ]; then
-            pytest test_api_endpoints.py -v -m integration --tb=short --log-cli-level=INFO
-          else
-            echo "No integration tests found"
-            # Create a simple test to verify API is working
-            curl -f http://localhost:8080/health || curl -f http://localhost:8080/games || echo "API endpoints test failed"
-          fi
-
-      - name: Check API logs (final)
-        if: always()
-        working-directory: backend
-        run: |
-          if [ -f api.log ]; then
-            echo "=== Final API Logs ==="
-            tail -100 api.log
-          fi
-
-      - name: Stop .NET API
-        if: always()
-        run: |
-          if [ -f backend/api_pid.txt ]; then
-            PID=$(cat backend/api_pid.txt)
-            echo "Stopping API with PID $PID..."
-            kill $PID 2>/dev/null || true
-            sleep 3
-            kill -9 $PID 2>/dev/null || true
-            echo "API stopped"
-          fi
-
-      - name: Upload integration test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results
-          path: |
-            backend/reports/
-            backend/api.log
-
-  # Job 4: Generate Coverage Report
-  coverage-report:
-    runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests]
-    name: Coverage Report
-    if: always()
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        working-directory: backend
-        run: |
-          python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-
-      - name: Generate coverage report
-        working-directory: backend
-        run: |
-          if [ -f test_unit.py ]; then
-            pytest test_unit.py --cov=. --cov-report=html --cov-report=term
-          else
-            echo "No unit tests to generate coverage for"
-          fi
-
-      - name: Upload coverage HTML report
-        if: hashFiles('backend/htmlcov/**') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report
-          path: backend/htmlcov/
-
-      - name: Coverage summary
-        working-directory: backend
-        run: |
-          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          coverage report >> $GITHUB_STEP_SUMMARY 2>&1 || echo "No coverage data available" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "Waiting for backend... ($i/30)"
+          sleep 2
+        done
+    
+    # Run pytest tests
+    - name: Run pytest
+      run: |
+        pytest -v --tb=short --cov=. --cov-report=xml --cov-report=html --cov-report=term-missing --html=reports/test_report.html --self-contained-html
+      continue-on-error: false
+    
+    # Stop the backend server
+    - name: Stop backend server
+      if: always()
+      run: |
+        if [ -f backend.pid ]; then
+          kill $(cat backend.pid) || true
+        fi
+    
+    # Upload test results
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: |
+          reports/test_report.html
+          htmlcov/
+    
+    # Upload coverage reports
+    - name: Upload coverage to Codecov
+      if: always()
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
