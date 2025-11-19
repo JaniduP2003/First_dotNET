@@ -127,6 +127,22 @@ jobs:
         cd backend
         dotnet build --no-restore
     
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        echo "Waiting for PostgreSQL to be ready..."
+        for i in {1..30}; do
+          if nc -z localhost 5432; then
+            echo "PostgreSQL port is open!"
+            sleep 2
+            echo "PostgreSQL is ready!"
+            exit 0
+          fi
+          echo "Attempt $i: PostgreSQL not ready yet, waiting..."
+          sleep 2
+        done
+        echo "PostgreSQL failed to start"
+        exit 1
+    
     - name: Start .NET API (background)
       env:
         ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
