@@ -117,6 +117,16 @@ jobs:
       with:
         dotnet-version: '9.0.x'
     
+    - name: Restore dependencies
+      run: |
+        cd backend
+        dotnet restore
+    
+    - name: Build project
+      run: |
+        cd backend
+        dotnet build --no-restore
+    
     - name: Start .NET API (background)
       env:
         ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
@@ -124,9 +134,20 @@ jobs:
         ASPNETCORE_URLS: "http://localhost:8080"
       run: |
         cd backend
-        dotnet run &
+        echo "Starting .NET API with connection string..."
+        dotnet run --no-build > api.log 2>&1 &
         echo $! > api_pid.txt
-        sleep 10
+        echo "API started with PID $(cat api_pid.txt)"
+        sleep 15
+    
+    - name: Check API logs
+      if: always()
+      run: |
+        cd backend
+        if [ -f api.log ]; then
+          echo "=== API Logs ==="
+          cat api.log
+        fi
     
     - name: Wait for API to be ready
       run: |
@@ -140,6 +161,11 @@ jobs:
           sleep 2
         done
         echo "API failed to start. Checking logs..."
+        cd backend
+        if [ -f api.log ]; then
+          echo "=== Final API Logs ==="
+          tail -100 api.log
+        fi
         exit 1
     
     - name: Run integration tests
