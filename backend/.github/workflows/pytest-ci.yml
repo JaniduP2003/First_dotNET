@@ -176,13 +176,13 @@ jobs:
           POSTGRES_USER: testuser
           POSTGRES_PASSWORD: testpass
           POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - name: Checkout code
@@ -203,28 +203,35 @@ jobs:
         working-directory: backend
         run: dotnet restore
 
-      - name: Wait for PostgreSQL
+      - name: Wait for PostgreSQL with better verification
         run: |
           echo "Waiting for PostgreSQL to be ready..."
           for i in {1..30}; do
-            if pg_isready -h localhost -p 5432 -U testuser > /dev/null 2>&1; then
-              echo "PostgreSQL is ready!"
+            # Test both connection methods
+            if PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "SELECT 1;" > /dev/null 2>&1; then
+              echo "PostgreSQL is ready and accepting connections!"
               exit 0
             fi
-            echo "Attempt $i: Waiting..."
+            echo "Attempt $i: Waiting for PostgreSQL..."
             sleep 2
           done
+          echo "❌ PostgreSQL failed to become ready"
           exit 1
+
+      - name: Test database connection
+        run: |
+          echo "Testing database connection..."
+          PGPASSWORD=testpass psql -h localhost -U testuser -d testdb -c "\l" || echo "Database connection test failed"
 
       - name: Apply database migrations
         env:
           ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
         working-directory: backend
         run: |
-          dotnet tool restore || true
-          dotnet ef database update --no-build --configuration Release || echo "Migration skipped"
+          echo "Applying database migrations..."
+          dotnet ef database update --no-build --configuration Release --verbose
 
-      - name: Start .NET API in background with timeout
+      - name: Start .NET API with proper connection string
         env:
           ConnectionStrings__PostgresConnection: "Host=localhost;Port=5432;Database=testdb;Username=testuser;Password=testpass"
           ASPNETCORE_ENVIRONMENT: Development
@@ -232,23 +239,44 @@ jobs:
         working-directory: backend
         run: |
           echo "Starting .NET API..."
+          echo "Using connection string: $ConnectionStrings__PostgresConnection"
+          
+          # Start the API in background
           dotnet run --no-build --configuration Release > api.log 2>&1 &
           API_PID=$!
           echo $API_PID > api_pid.txt
           echo "API started with PID $API_PID"
           
-          # Quick startup check with timeout
-          for i in {1..30}; do
-            if curl -f -s http://localhost:8080/games > /dev/null 2>&1 || \
-               curl -f -s http://localhost:8080/health > /dev/null 2>&1; then
-              echo "✓ API is ready after $i seconds!"
+          # Wait for API to start with better health checks
+          echo "Waiting for API to start..."
+          for i in {1..60}; do
+            # Check if process is still running
+            if ! kill -0 $API_PID 2>/dev/null; then
+              echo "❌ API process died"
+              cat api.log
+              exit 1
+            fi
+            
+            # Try multiple endpoints
+            if curl -f -s http://localhost:8080/health > /dev/null 2>&1 || \
+               curl -f -s http://localhost:8080/games > /dev/null 2>&1 || \
+               curl -f -s http://localhost:8080/ > /dev/null 2>&1 || \
+               curl -f -s http://localhost:8080/swagger > /dev/null 2>&1; then
+              echo "✅ API is ready after $i seconds!"
+              
+              # Test database connectivity through API
+              echo "Testing API database connectivity..."
+              curl -s http://localhost:8080/health || curl -s http://localhost:8080/games || true
               exit 0
             fi
-            sleep 1
+            echo "Attempt $i: API not ready yet, waiting..."
+            sleep 2
           done
           
-          echo "⚠ API may not be fully ready, continuing anyway..."
-          cat api.log || true
+          echo "❌ API failed to start within 120 seconds"
+          echo "=== API Logs ==="
+          cat api.log
+          exit 1
 
       - name: Set up Python for integration tests
         uses: actions/setup-python@v5
@@ -271,9 +299,11 @@ jobs:
         run: |
           echo "Running integration tests against the built API..."
           if [ -f test_api_endpoints.py ]; then
-            pytest test_api_endpoints.py -v -m integration --tb=short
+            pytest test_api_endpoints.py -v -m integration --tb=short --log-cli-level=INFO
           else
             echo "No integration tests found"
+            # Create a simple test to verify API is working
+            curl -f http://localhost:8080/health || curl -f http://localhost:8080/games || echo "API endpoints test failed"
           fi
 
       - name: Check API logs (final)
@@ -282,7 +312,7 @@ jobs:
         run: |
           if [ -f api.log ]; then
             echo "=== Final API Logs ==="
-            cat api.log
+            tail -100 api.log
           fi
 
       - name: Stop .NET API
@@ -291,9 +321,10 @@ jobs:
           if [ -f backend/api_pid.txt ]; then
             PID=$(cat backend/api_pid.txt)
             echo "Stopping API with PID $PID..."
-            kill $PID || true
-            sleep 2
+            kill $PID 2>/dev/null || true
+            sleep 3
             kill -9 $PID 2>/dev/null || true
+            echo "API stopped"
           fi
 
       - name: Upload integration test results
